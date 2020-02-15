@@ -1,19 +1,98 @@
 <html>
   <head>
-<style>
-
-</style>
-    <script src='https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.js'></script>
+    <style></style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.js"></script>
     <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
-    <script src="https://unpkg.com/react@16/umd/react.development.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js" crossorigin></script>
-    <script src='https://cdnjs.cloudflare.com/ajax/libs/react-router-dom/5.0.0/react-router-dom.js'></script>
+    <script
+      src="https://unpkg.com/react@16/umd/react.development.js"
+      crossorigin
+    ></script>
+    <script
+      src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"
+      crossorigin
+    ></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-router-dom/5.0.0/react-router-dom.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-router-dom/5.0.1/react-router-dom.js"></script>
+
+    <style>
+      * {
+        font-family: Arial, Helvetica, sans-serif;
+      }
+    </style>
   </head>
   <body>
-    <div id='root'></div>
-    <script type='text/babel'>
-      const root = document.querySelector('#root');
-      ReactDOM.render(<hr />, root);
+    <div id="root"></div>
+    <script type="text/babel">
+      const API = "https://acme-users-api-rev.herokuapp.com/api";
+
+      const { Component } = React;
+      const { render } = ReactDOM;
+      const { HashRouter, Route, Link, Switch, Redirect } = ReactRouterDOM;
+
+      const fetchUser = async () => {
+        const storage = window.localStorage;
+        const userId = storage.getItem("userId");
+        if (userId) {
+          try {
+            return (await axios.get(`${API}/users/detail/${userId}`)).data;
+          } catch (ex) {
+            storage.removeItem("userId");
+            return fetchUser();
+          }
+        }
+        const user = (await axios.get(`${API}/users/random`)).data;
+        storage.setItem("userId", user.id);
+        return user;
+      };
+
+      const Title = ({user, bookmarks}) => {
+        return (
+          <h1> {user.fullName} has {bookmarks.length} bookmarks </h1>
+        )
+      }
+
+      const CategoryBar = ({bookmarks}) => {
+        const categories = bookmarks.reduce((acc, current) => {
+          acc.push(current.category)
+          return acc
+        }, [])
+        console.log(categories)
+        return (
+          categories.map( category => {
+            return (
+              <Link to='/{category}'> {category} </Link>
+            )
+          })
+        )
+      }
+      class App extends Component {
+        constructor() {
+          super()
+          this.state = {
+            user: {},
+            bookmarks: []
+          }
+        }
+        async componentDidMount() {
+          const user = await fetchUser()
+          const bookmarks = (await axios.get(`${API}/users/${user.id}/bookmarks`)).data
+          console.log(bookmarks)
+          this.setState({user, bookmarks})
+        }
+
+        render() {
+          const { user, bookmarks } = this.state
+          return (
+            <HashRouter>
+              <Title user={ user } bookmarks={ bookmarks }/>
+              <Route render={() => <CategoryBar bookmarks={ bookmarks }/>} />
+
+            </HashRouter>
+          )
+        }
+      }
+      const root = document.querySelector("#root");
+      ReactDOM.render(<App />, root);
     </script>
   </body>
 </html>

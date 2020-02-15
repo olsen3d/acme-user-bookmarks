@@ -1,0 +1,40 @@
+Endpoint /users/:id/bookmarks
+
+/api/users/:id/bookmarks Returns the bookmarks from a user
+
+POST /api/users/:userId/bookmarks
+
+PAYLOAD { category: string, url: string, rating: integer }
+returns the created bookmark
+
+PUT /api/users/:userId/bookmarks/:bookmarkId
+PAYLOAD { category: string, url: string, rating: integer }
+returns the updated bookmark
+
+DELETE /api/users/:userId/bookmarks/:bookmarkId
+returns nothing
+
+81eecff6-eee0-4395-9ac7-83a586e7ecdd
+
+curl 'https://acme-users-api-rev.herokuapp.com/api/users/81eecff6-eee0-4395-9ac7-83a586e7ecdd/bookmarks' -X POST -d '{"category": "gaming", "url": "polygon.com", "rating": "4" }' -H "Content-Type:application/json"
+
+Workshop
+fork starting repo https://github.com/ericpkatz/acme-user-bookmarks
+use bookmarks endpoints of api https://acme-users-api-rev.herokuapp.com/
+https://gist.github.com/ericpkatz/49a914cc2cce790fa72b3dec4d163366
+
+you'll be building an app which will allow a user to manage their bookmarks
+
+each bookmark has a url and a category
+a user can have at most 10 bookmarks
+
+A note about navigation
+Each bookmark can have a category
+Set up navigation so that a user can filter their bookmarks by category
+A user should be taken to the category of an inserted bookmark
+
+
+fullName (number of bookmarks)
+tabs of categories
+form with url and category and create button
+list of bookmarks with a delete button
