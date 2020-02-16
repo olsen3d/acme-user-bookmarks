@@ -195,7 +195,7 @@
           this.destroy = this.destroy.bind(this)
           this.create = this.create.bind(this)
         }
-        
+
         async componentDidMount() {
           const user = await fetchUser()
           const bookmarks = (await axios.get(`${API}/users/${user.id}/bookmarks`)).data
@@ -221,26 +221,15 @@
           return (
             <HashRouter>
               <Title user={user} bookmarks={bookmarks} />
-              <Route
-                path="/:filter?"
-                render={props => (
+              <Route path="/:filter?" render={props => (
                   <CategoryBar {...props} bookmarks={bookmarks} />
                 )}
               />
-              <Route
-                render={props => (
-                  <Create
-                    {...props}
-                    bookmarks={bookmarks}
-                    history={props.history}
-                    create={create}
-                  />
+              <Route render={props => (
+                  <Create {...props} bookmarks={bookmarks} history={props.history} create={create} />
                 )}
               />
-
-              <Route
-                path="/:filter?"
-                render={props => (
+              <Route path="/:filter?" render={props => (
                   <List {...props} bookmarks={bookmarks} destroy={destroy} />
                 )}
               />
