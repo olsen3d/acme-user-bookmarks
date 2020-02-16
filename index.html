@@ -1,249 +1,256 @@
 <html>
-  <head>
-    <style></style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.js"></script>
-    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
-    <script
-      src="https://unpkg.com/react@16/umd/react.development.js"
-      crossorigin
-    ></script>
-    <script
-      src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"
-      crossorigin
-    ></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-router-dom/5.0.0/react-router-dom.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-router-dom/5.0.1/react-router-dom.js"></script>
 
-    <style>
-      * {
-        font-family: Arial, Helvetica, sans-serif;
-        color: white;
-      }
-      body {
-        background-color: #333333;
-      }
-      .categoryBar {
-        padding: 1rem;
-        display: flex;
-        justify-content: space-around;
-      }
-      .categoryBar > * {
-        padding: 0.5rem;
-        background-color: #333333;
-        border-radius: 0.5rem;
-      }
-      .selected {
-        background-color: lightseagreen;
-        color: white;
-        padding: 0.5rem;
-      }
-      li {
-        list-style-type: none;
-        margin: 0.5rem;
-      }
-      button {
-        background-color: lightseagreen;
-      }
-      button,input {
-        margin: 0 1rem;
-      }
-      .container {
-        display: flex;
-        justify-content: center;
-      }
-      form {
-        background-color: lightgray;
-        border-radius: 1rem;
-        color: black;
-        display: flex;
-        flex-direction: column;
-        padding: 1rem;
-        margin: 0.5rem 0;
-        width: 70%;
-        justify-content: center;
-      }
-      form > * {
-        margin: 0.25rem;
-        color: black;
-      }
-    </style>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="text/babel">
-      const API = "https://acme-users-api-rev.herokuapp.com/api";
+<head>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.js"></script>
+  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+  <script src="https://unpkg.com/react@16/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-router-dom/5.0.0/react-router-dom.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-router-dom/5.0.1/react-router-dom.js"></script>
 
-      const { Component } = React;
-      const { render } = ReactDOM;
-      const { HashRouter, Route, Link, Switch, Redirect } = ReactRouterDOM;
+  <style>
+    * {
+      font-family: Arial, Helvetica, sans-serif;
+      color: white;
+    }
+
+    body {
+      background-color: #333333;
+    }
+
+    .categoryBar {
+      padding: 1rem;
+      display: flex;
+      justify-content: space-around;
+    }
+
+    .categoryBar>* {
+      padding: 0.5rem;
+      background-color: #333333;
+      border-radius: 0.5rem;
+    }
+
+    .selected {
+      background-color: lightseagreen;
+      color: white;
+      padding: 0.5rem;
+    }
+
+    li {
+      list-style-type: none;
+      margin: 0.5rem;
+    }
+
+    button {
+      background-color: lightseagreen;
+    }
+
+    button {
+      margin: 0 1rem;
+    }
+
+    .container {
+      display: flex;
+      justify-content: center;
+    }
+
+    form {
+      background-color: lightgray;
+      border-radius: 1rem;
+      display: flex;
+      flex-direction: column;
+      padding: 1rem;
+      margin: 0.5rem 0;
+      width: 70%;
+      justify-content: center;
+    }
+
+    form>* {
+      margin: 0.25rem;
+      color: black;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const API = "https://acme-users-api-rev.herokuapp.com/api"
+
+      const { Component } = React
+      const { render } = ReactDOM
+      const { HashRouter, Route, Link, Switch, Redirect } = ReactRouterDOM
 
       const fetchUser = async () => {
-        const storage = window.localStorage;
-        const userId = storage.getItem("userId");
+        const storage = window.localStorage
+        const userId = storage.getItem("userId")
         if (userId) {
           try {
-            return (await axios.get(`${API}/users/detail/${userId}`)).data;
+            return (await axios.get(`${API}/users/detail/${userId}`)).data
           } catch (ex) {
-            storage.removeItem("userId");
-            return fetchUser();
+            storage.removeItem("userId")
+            return fetchUser()
           }
         }
-        const user = (await axios.get(`${API}/users/random`)).data;
-        storage.setItem("userId", user.id);
-        return user;
-      };
+        const user = (await axios.get(`${API}/users/random`)).data
+        storage.setItem("userId", user.id)
+        return user
+      }
 
       const Title = ({ user, bookmarks }) => {
         return (
-          <h1>
-            {user.fullName} has {bookmarks.length} bookmarks
-          </h1>
-        );
-      };
+          <h1> {user.fullName} has {bookmarks.length} bookmarks </h1>
+        )
+      }
 
-      const CategoryBar = ({ path, bookmarks }) => {
-        const categoryCounter = {};
+      const CategoryBar = ({ bookmarks, match }) => {
+        const categoryCounter = {}
         const categories = bookmarks.reduce((acc, current) => {
           if (!categoryCounter[current.category]) categoryCounter[current.category] = 1
           else categoryCounter[current.category]++
           if (!acc.includes(current.category)) acc.push(current.category)
           return acc
-        }, []);
+        }, [])
+
         return (
           <div className="categoryBar">
             {categories.map(category => {
               return (
-                <Link
-                  key={category}
-                  to={category}
-                  className={path === category ? "selected" : ""}
-                >
+                <Link key={category} to={category} className={match.params.filter === category ? "selected" : ""} >
                   {category} ({categoryCounter[category]})
                 </Link>
-              );
+              )
             })}
           </div>
-        );
-      };
+        )
+      }
 
-      const List = ({ path, bookmarks, destroy }) => {
+      const List = ({ bookmarks, destroy, match }) => {
         return (
-          <div className='container'>
-          <ul>
-            {bookmarks
-              .filter(mark => mark.category === path)
-              .map(mark => {
-                return (
-                  <li key={mark.id}>
-                    <a href="{mark.url}">{mark.url}</a>
-                    <button onClick={() => destroy(mark)}> Delete </button>
-                  </li>
-                  );
+          <div className="container">
+            <ul>
+              {bookmarks
+                .filter(mark => mark.category === match.params.filter)
+                .map(mark => {
+                  return (
+                    <li key={mark.id}>
+                      <a href="{mark.url}">{mark.url}</a>
+                      <button onClick={() => destroy(mark)}> Delete </button>
+                    </li>
+                  )
                 })}
-                </ul>
-                </div>
-        );
-      };
+            </ul>
+          </div>
+        )
+      }
 
       class Create extends Component {
         constructor() {
           super()
-          this.state= {
-            url: 'url',
-            category: 'category'
+          this.state = {
+            url: "url",
+            category: "category"
           }
           this.create = this.create.bind(this)
         }
 
-        create() {
-          const bookmark = {category: this.state.category, url: this.state.url, rating: 0}
-          this.props.create(bookmark)
+        create(history) {
+          const bookmark = {
+            category: this.state.category,
+            url: this.state.url,
+            rating: 0
+          }
+          this.props.create(bookmark, history)
         }
 
         render() {
-          const { bookmarks } = this.props
-          console.log(bookmarks)
+          const { bookmarks, history } = this.props
           const { url, category } = this.state
           const { create } = this
+
           return (
-            <div className='container'>
-              <form onSubmit={(ev) => ev.preventDefault()}>
-              <div id='info '>{bookmarks.length >= 10 ? 'User can only have 10 bookmarks!' : 'Create bookmark'}</div>
-              <input value={url} onChange={(ev) => this.setState({url: ev.target.value})}/>
-              <input value={ category } onChange={(ev) => this.setState({category: ev.target.value})}/>
-              <button disabled={bookmarks.length >= 10 ? true : false} onClick={() => create()}>Create bookmark</button>
+            <div className="container">
+              <form onSubmit={ev => ev.preventDefault()}>
+                <div id="info">
+                  {bookmarks.length >= 10 ? "User can only have 10 bookmarks!" : "Create bookmark"}
+                </div>
+                <input value={url} onChange={ev => this.setState({ url: ev.target.value })} />
+                <input value={category} onChange={ev => this.setState({ category: ev.target.value })} />
+                <button disabled={bookmarks.length >= 10 ? true : false} onClick={() => create(history)} >
+                  Create bookmark
+                </button>
               </form>
-              </div>
+            </div>
           )
         }
       }
 
       class App extends Component {
         constructor() {
-          super();
+          super()
           this.state = {
             user: {},
             bookmarks: []
-          };
-          this.destroy = this.destroy.bind(this);
+          }
+          this.destroy = this.destroy.bind(this)
           this.create = this.create.bind(this)
         }
+        
         async componentDidMount() {
-          const user = await fetchUser();
-          const bookmarks = (
-            await axios.get(`${API}/users/${user.id}/bookmarks`)
-          ).data;
-          console.log(bookmarks);
-          this.setState({ user, bookmarks });
+          const user = await fetchUser()
+          const bookmarks = (await axios.get(`${API}/users/${user.id}/bookmarks`)).data
+          this.setState({ user, bookmarks })
         }
 
-        async create(bookmark) {
-          const { category, url, rating } = bookmark
-          const created = (await axios.post(`${API}/users/${this.state.user.id}/bookmarks`, { category: category, url: url, rating: 0}))
+        async create(bookmark, history) {
+          const created = (await axios.post(`${API}/users/${this.state.user.id}/bookmarks`, bookmark)).data
+          this.setState({ bookmarks: [...this.state.bookmarks, created] })
+          history.push(bookmark.category)
         }
 
         async destroy(mark) {
-          await axios.delete(
-            `${API}/users/${this.state.user.id}/bookmarks/${mark.id}`
-          );
-          this.setState({
-            bookmarks: this.state.bookmarks.filter(
-              currentMark => currentMark.id !== mark.id
-            )
-          });
+          await axios.delete(`${API}/users/${this.state.user.id}/bookmarks/${mark.id}`)
+          this.setState({ bookmarks: this.state.bookmarks.filter( currentMark => currentMark.id !== mark.id)
+          })
         }
 
         render() {
-          const { user, bookmarks } = this.state;
-          const { destroy, create } = this;
+          const { user, bookmarks } = this.state
+          const { destroy, create } = this
+          const last = bookmarks[bookmarks.length - 1]
           return (
             <HashRouter>
               <Title user={user} bookmarks={bookmarks} />
               <Route
-                render={() => (
-                  <CategoryBar
-                    path={location.hash.slice(2)}
+                path="/:filter?"
+                render={props => (
+                  <CategoryBar {...props} bookmarks={bookmarks} />
+                )}
+              />
+              <Route
+                render={props => (
+                  <Create
+                    {...props}
                     bookmarks={bookmarks}
+                    history={props.history}
+                    create={create}
                   />
                 )}
               />
-              <Route render={() => <Create bookmarks={bookmarks} create={create}/>} />
 
               <Route
-                render={() => (
-                  <List
-                    path={location.hash.slice(2)}
-                    bookmarks={bookmarks}
-                    destroy={destroy}
-                  />
+                path="/:filter?"
+                render={props => (
+                  <List {...props} bookmarks={bookmarks} destroy={destroy} />
                 )}
               />
             </HashRouter>
-          );
+          )
         }
       }
-      const root = document.querySelector("#root");
-      ReactDOM.render(<App />, root);
+      const root = document.querySelector("#root")
+      ReactDOM.render(<App />, root)
     </script>
-  </body>
+</body>
+
 </html>
