@@ -17,6 +17,54 @@
     <style>
       * {
         font-family: Arial, Helvetica, sans-serif;
+        color: white;
+      }
+      body {
+        background-color: #333333;
+      }
+      .categoryBar {
+        padding: 1rem;
+        display: flex;
+        justify-content: space-around;
+      }
+      .categoryBar > * {
+        padding: 0.5rem;
+        background-color: #333333;
+        border-radius: 0.5rem;
+      }
+      .selected {
+        background-color: lightseagreen;
+        color: white;
+        padding: 0.5rem;
+      }
+      li {
+        list-style-type: none;
+        margin: 0.5rem;
+      }
+      button {
+        background-color: lightseagreen;
+      }
+      button,input {
+        margin: 0 1rem;
+      }
+      .container {
+        display: flex;
+        justify-content: center;
+      }
+      form {
+        background-color: lightgray;
+        border-radius: 1rem;
+        color: black;
+        display: flex;
+        flex-direction: column;
+        padding: 1rem;
+        margin: 0.5rem 0;
+        width: 70%;
+        justify-content: center;
+      }
+      form > * {
+        margin: 0.25rem;
+        color: black;
       }
     </style>
   </head>
@@ -45,50 +93,153 @@
         return user;
       };
 
-      const Title = ({user, bookmarks}) => {
+      const Title = ({ user, bookmarks }) => {
         return (
-          <h1> {user.fullName} has {bookmarks.length} bookmarks </h1>
-        )
-      }
+          <h1>
+            {user.fullName} has {bookmarks.length} bookmarks
+          </h1>
+        );
+      };
 
-      const CategoryBar = ({bookmarks}) => {
+      const CategoryBar = ({ path, bookmarks }) => {
+        const categoryCounter = {};
         const categories = bookmarks.reduce((acc, current) => {
-          acc.push(current.category)
+          if (!categoryCounter[current.category]) categoryCounter[current.category] = 1
+          else categoryCounter[current.category]++
+          if (!acc.includes(current.category)) acc.push(current.category)
           return acc
-        }, [])
-        console.log(categories)
+        }, []);
         return (
-          categories.map( category => {
-            return (
-              <Link to='/{category}'> {category} </Link>
-            )
-          })
-        )
-      }
-      class App extends Component {
+          <div className="categoryBar">
+            {categories.map(category => {
+              return (
+                <Link
+                  key={category}
+                  to={category}
+                  className={path === category ? "selected" : ""}
+                >
+                  {category} ({categoryCounter[category]})
+                </Link>
+              );
+            })}
+          </div>
+        );
+      };
+
+      const List = ({ path, bookmarks, destroy }) => {
+        return (
+          <div className='container'>
+          <ul>
+            {bookmarks
+              .filter(mark => mark.category === path)
+              .map(mark => {
+                return (
+                  <li key={mark.id}>
+                    <a href="{mark.url}">{mark.url}</a>
+                    <button onClick={() => destroy(mark)}> Delete </button>
+                  </li>
+                  );
+                })}
+                </ul>
+                </div>
+        );
+      };
+
+      class Create extends Component {
         constructor() {
           super()
-          this.state = {
-            user: {},
-            bookmarks: []
+          this.state= {
+            url: 'url',
+            category: 'category'
           }
+          this.create = this.create.bind(this)
         }
-        async componentDidMount() {
-          const user = await fetchUser()
-          const bookmarks = (await axios.get(`${API}/users/${user.id}/bookmarks`)).data
-          console.log(bookmarks)
-          this.setState({user, bookmarks})
+
+        create() {
+          const bookmark = {category: this.state.category, url: this.state.url, rating: 0}
+          this.props.create(bookmark)
         }
 
         render() {
-          const { user, bookmarks } = this.state
+          const { bookmarks } = this.props
+          console.log(bookmarks)
+          const { url, category } = this.state
+          const { create } = this
+          return (
+            <div className='container'>
+              <form onSubmit={(ev) => ev.preventDefault()}>
+              <div id='info '>{bookmarks.length >= 10 ? 'User can only have 10 bookmarks!' : 'Create bookmark'}</div>
+              <input value={url} onChange={(ev) => this.setState({url: ev.target.value})}/>
+              <input value={ category } onChange={(ev) => this.setState({category: ev.target.value})}/>
+              <button disabled={bookmarks.length >= 10 ? true : false} onClick={() => create()}>Create bookmark</button>
+              </form>
+              </div>
+          )
+        }
+      }
+
+      class App extends Component {
+        constructor() {
+          super();
+          this.state = {
+            user: {},
+            bookmarks: []
+          };
+          this.destroy = this.destroy.bind(this);
+          this.create = this.create.bind(this)
+        }
+        async componentDidMount() {
+          const user = await fetchUser();
+          const bookmarks = (
+            await axios.get(`${API}/users/${user.id}/bookmarks`)
+          ).data;
+          console.log(bookmarks);
+          this.setState({ user, bookmarks });
+        }
+
+        async create(bookmark) {
+          const { category, url, rating } = bookmark
+          const created = (await axios.post(`${API}/users/${this.state.user.id}/bookmarks`, { category: category, url: url, rating: 0}))
+        }
+
+        async destroy(mark) {
+          await axios.delete(
+            `${API}/users/${this.state.user.id}/bookmarks/${mark.id}`
+          );
+          this.setState({
+            bookmarks: this.state.bookmarks.filter(
+              currentMark => currentMark.id !== mark.id
+            )
+          });
+        }
+
+        render() {
+          const { user, bookmarks } = this.state;
+          const { destroy, create } = this;
           return (
             <HashRouter>
-              <Title user={ user } bookmarks={ bookmarks }/>
-              <Route render={() => <CategoryBar bookmarks={ bookmarks }/>} />
+              <Title user={user} bookmarks={bookmarks} />
+              <Route
+                render={() => (
+                  <CategoryBar
+                    path={location.hash.slice(2)}
+                    bookmarks={bookmarks}
+                  />
+                )}
+              />
+              <Route render={() => <Create bookmarks={bookmarks} create={create}/>} />
 
+              <Route
+                render={() => (
+                  <List
+                    path={location.hash.slice(2)}
+                    bookmarks={bookmarks}
+                    destroy={destroy}
+                  />
+                )}
+              />
             </HashRouter>
-          )
+          );
         }
       }
       const root = document.querySelector("#root");
